@@ -1,5 +1,6 @@
 package com.github.mantis133.puzzleapp.ui.screens.chess
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mantis133.puzzleapp.data.chess.ChessDownloadManager
-import com.github.mantis133.puzzleapp.puzzle.chess.MoveResult
 import com.github.mantis133.puzzleapp.puzzle.chess.PieceColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,11 +92,7 @@ fun ChessPuzzleScreen(
                     )
 
                     // Board — fills width, kept square
-                    val wrongTint = if (state.moveStatus == MoveStatus.WRONG)
-                        MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surface
-
-                    Surface(
-                        color    = wrongTint,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp)
@@ -116,6 +112,25 @@ fun ChessPuzzleScreen(
                     }
 
                     Spacer(Modifier.height(12.dp))
+
+                    // ── Puzzle Failed dialog ───────────────────────────────
+                    if (state.showFailedDialog) {
+                        AlertDialog(
+                            onDismissRequest = { viewModel.onContinueAfterFail() },
+                            title = { Text("Puzzle Failed", fontWeight = FontWeight.Bold) },
+                            text  = { Text("That wasn't the right move. You can try again from the current position or restart from the beginning.") },
+                            confirmButton = {
+                                Button(onClick = { viewModel.onContinueAfterFail() }) {
+                                    Text("Try Again")
+                                }
+                            },
+                            dismissButton = {
+                                OutlinedButton(onClick = { viewModel.onRestartPuzzle() }) {
+                                    Text("Restart Puzzle")
+                                }
+                            }
+                        )
+                    }
 
                     // Solved banner
                     if (state.puzzleStatus == PuzzleStatus.SOLVED) {
@@ -139,6 +154,11 @@ fun ChessPuzzleScreen(
                     // Rating range
                     RatingRangeSection(state.minRating, state.maxRating) { min, max ->
                         viewModel.setRatingRange(min, max)
+                    }
+
+                    // Theme filter
+                    ThemeFilterSection(state.selectedTheme) { theme ->
+                        viewModel.setTheme(theme)
                     }
                 }
             }
@@ -208,6 +228,23 @@ private val RATING_PRESETS = listOf(
     "All"          to (600  to 2500)
 )
 
+/** Common Lichess theme tags shown as filter chips. */
+private val CHESS_THEMES = listOf(
+    "fork", "pin", "skewer", "discoveredAttack", "doubleCheck",
+    "hangingPiece", "trappedPiece", "sacrifice", "deflection",
+    "attraction", "clearance", "intermezzo", "xRayAttack",
+    "mate", "mateIn1", "mateIn2", "mateIn3",
+    "backRankMate", "quietMove", "zugzwang",
+    "middlegame", "endgame", "opening"
+)
+
+/** "discoveredAttack" → "Discovered Attack", "mateIn1" → "Mate In 1" */
+private fun String.toThemeLabel(): String =
+    replace(Regex("([A-Z])")) { " ${it.value}" }
+        .replace(Regex("([a-zA-Z])([0-9])")) { "${it.groupValues[1]} ${it.groupValues[2]}" }
+        .trim()
+        .replaceFirstChar { it.uppercase() }
+
 @Composable
 private fun RatingRangeSection(currentMin: Int, currentMax: Int, onRange: (Int, Int) -> Unit) {
     Column(Modifier.padding(16.dp).fillMaxWidth()) {
@@ -227,4 +264,39 @@ private fun RatingRangeSection(currentMin: Int, currentMax: Int, onRange: (Int, 
     }
 }
 
+// ── Theme filter ──────────────────────────────────────────────────────────────
 
+@Composable
+private fun ThemeFilterSection(selectedTheme: String?, onTheme: (String?) -> Unit) {
+    Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp).fillMaxWidth()) {
+        Text("Theme", style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // "Any" chip (deselects theme)
+            FilterChip(
+                selected = selectedTheme == null,
+                onClick  = { onTheme(null) },
+                label    = { Text("Any") }
+            )
+            CHESS_THEMES.forEach { theme ->
+                FilterChip(
+                    selected = selectedTheme == theme,
+                    onClick  = { onTheme(if (selectedTheme == theme) null else theme) },
+                    label    = { Text(theme.toThemeLabel()) }
+                )
+            }
+        }
+        if (selectedTheme != null) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Filtering by: ${selectedTheme.toThemeLabel()} — applies to the next puzzle loaded.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}

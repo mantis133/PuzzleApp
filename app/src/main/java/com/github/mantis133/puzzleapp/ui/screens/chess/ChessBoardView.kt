@@ -1,5 +1,4 @@
 package com.github.mantis133.puzzleapp.ui.screens.chess
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -9,11 +8,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import com.github.mantis133.puzzleapp.puzzle.chess.Piece
@@ -112,16 +112,40 @@ fun ChessBoardView(
                 // ── Piece glyph ───────────────────────────────────────────
                 val piece = board[boardSq]
                 if (piece != null) {
-                    val fontSize = (sqSize * 0.72f).sp
+                    // Measure at a generous size for glyph quality.
+                    val fontSize = (sqSize * 0.85f).sp
                     val measured = textMeasurer.measure(
                         text  = pieceGlyph(piece),
-                        style = TextStyle(fontSize = fontSize, fontFamily = FontFamily.Default, fontWeight = FontWeight.Normal)
+                        style = TextStyle(fontSize = fontSize, fontFamily = FontFamily.Default)
                     )
-                    // Shadow
-                    drawText(measured, color = Color(0x55000000),
-                        topLeft = Offset(x + (sqSize - measured.size.width) / 2f + 1.5f, y + (sqSize - measured.size.height) / 2f + 1.5f))
-                    drawText(measured,
-                        topLeft = Offset(x + (sqSize - measured.size.width) / 2f, y + (sqSize - measured.size.height) / 2f))
+                    // Scale so the measured bounds occupy 78 % of the cell.
+                    // Chess Unicode glyphs visually extend ~20-25 % beyond their
+                    // reported metrics, so 78 % measured → ~95 % visual → fits cleanly.
+                    val available = sqSize * 0.78f
+                    val sf = minOf(
+                        available / measured.size.width.toFloat(),
+                        available / measured.size.height.toFloat(),
+                        1.0f
+                    )
+                    val cx = x + sqSize / 2f
+                    val cy = y + sqSize / 2f
+                    val tx = cx - measured.size.width / 2f
+                    val ty = cy - measured.size.height / 2f
+
+                    withTransform({ this.scale(sf, sf, Offset(cx, cy)) }) {
+                        if (piece.color == PieceColor.WHITE) {
+                            // Four-corner dark outline then white fill → crisp on any square.
+                            val outline = Color(0xDD000000)
+                            for (dx in listOf(-1.5f, 1.5f))
+                                for (dy in listOf(-1.5f, 1.5f))
+                                    drawText(measured, color = outline, topLeft = Offset(tx + dx, ty + dy))
+                            drawText(measured, color = Color.White, topLeft = Offset(tx, ty))
+                        } else {
+                            // White drop-shadow then near-black fill.
+                            drawText(measured, color = Color(0x99FFFFFF), topLeft = Offset(tx + 1.5f, ty + 1.5f))
+                            drawText(measured, color = Color(0xFF0D0D0D), topLeft = Offset(tx, ty))
+                        }
+                    }
                 }
             }
         }
