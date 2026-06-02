@@ -1,7 +1,9 @@
 package com.github.mantis133.puzzleapp.ui.screens.shikaku
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.mantis133.puzzleapp.data.StatsRepository
 import com.github.mantis133.puzzleapp.puzzle.core.Difficulty
 import com.github.mantis133.puzzleapp.puzzle.shikaku.PlacementResult
 import com.github.mantis133.puzzleapp.puzzle.shikaku.ShikakuBoard
@@ -34,9 +36,10 @@ data class ShikakuUiState(
     val difficulty: Difficulty = Difficulty.Easy
 )
 
-class ShikakuViewModel : ViewModel() {
+class ShikakuViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val engine = ShikakuEngine()
+    private val engine     = ShikakuEngine()
+    private val statsRepo  = StatsRepository(application)
 
     private val _uiState = MutableStateFlow(ShikakuUiState())
     val uiState: StateFlow<ShikakuUiState> = _uiState.asStateFlow()
@@ -77,7 +80,15 @@ class ShikakuViewModel : ViewModel() {
         val complete  = engine.isSolved(board, newPlaced.map { it.rect })
 
         _uiState.update { it.copy(placedRectangles = newPlaced, isComplete = complete) }
-        if (complete) timerJob?.cancel()
+
+        if (complete) {
+            timerJob?.cancel()
+            // Record stats for preset difficulties
+            val elapsed = _uiState.value.elapsedSeconds
+            viewModelScope.launch {
+                statsRepo.recordShikakuCompletion(state.difficulty, elapsed)
+            }
+        }
     }
 
     /** Removes whichever rectangle covers cell (row, col), if any. */
@@ -112,5 +123,3 @@ class ShikakuViewModel : ViewModel() {
         timerJob?.cancel()
     }
 }
-
-

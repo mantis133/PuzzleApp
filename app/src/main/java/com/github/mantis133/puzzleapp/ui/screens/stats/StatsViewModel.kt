@@ -1,0 +1,22 @@
+package com.github.mantis133.puzzleapp.ui.screens.stats
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.github.mantis133.puzzleapp.data.ShikakuStats
+import com.github.mantis133.puzzleapp.data.StatsRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+
+class StatsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val repo = StatsRepository(application)
+
+    val shikakuStats: StateFlow<ShikakuStats> = repo.shikakuStats.stateIn(
+        scope          = viewModelScope,
+        started        = SharingStarted.WhileSubscribed(5_000),
+        initialValue   = ShikakuStats()
+    )
+}
+
