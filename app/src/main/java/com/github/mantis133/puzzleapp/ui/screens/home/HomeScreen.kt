@@ -23,6 +23,7 @@ private val CUSTOM_SENTINEL: Difficulty = Difficulty.Custom(6, 6)
 @Composable
 fun HomeScreen(
     onNavigateToShikaku: (Difficulty) -> Unit,
+    onNavigateToChess: () -> Unit,
     onOpenDrawer: () -> Unit
 ) {
     Scaffold(
@@ -62,6 +63,9 @@ fun HomeScreen(
             }
 
             item { PuzzleCard(info = PuzzleTypes.SHIKAKU, onPlay = onNavigateToShikaku) }
+            item {
+                ChessCard(onPlay = onNavigateToChess)
+            }
         }
     }
 }
@@ -175,6 +179,27 @@ private fun PuzzleCard(
             ) {
                 Text("Play")
             }
+        }
+    }
+}
+
+@Composable
+private fun ChessCard(onPlay: () -> Unit) {
+    val info = PuzzleTypes.CHESS
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = info.emoji, style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(info.displayName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(2.dp))
+                    Text(info.description, style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onPlay, modifier = Modifier.fillMaxWidth()) { Text("Play") }
         }
     }
 }

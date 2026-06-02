@@ -10,12 +10,19 @@ data class PuzzleTypeInfo(
 
 object PuzzleTypes {
     val SHIKAKU = PuzzleTypeInfo(
-        id = "shikaku",
+        id          = "shikaku",
         displayName = "Shikaku",
         description = "Divide the grid into rectangles. Each number shows the area of its rectangle.",
-        emoji = "⬜"
+        emoji       = "⬜"
     )
 
-    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU)
+    val CHESS = PuzzleTypeInfo(
+        id          = "chess",
+        displayName = "Chess Puzzles",
+        description = "Tactics puzzles from the Lichess open database. Find the winning move.",
+        emoji       = "♟"
+    )
+
+    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU, CHESS)
 }
 

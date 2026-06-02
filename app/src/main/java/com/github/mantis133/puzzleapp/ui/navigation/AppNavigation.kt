@@ -21,6 +21,8 @@ import com.github.mantis133.puzzleapp.puzzle.core.Difficulty
 import com.github.mantis133.puzzleapp.puzzle.core.difficultyFromNavArg
 import com.github.mantis133.puzzleapp.puzzle.core.toNavArg
 import com.github.mantis133.puzzleapp.ui.screens.home.HomeScreen
+import com.github.mantis133.puzzleapp.ui.screens.chess.ChessPuzzleScreen
+import com.github.mantis133.puzzleapp.ui.screens.home.HomeScreen
 import com.github.mantis133.puzzleapp.ui.screens.shikaku.ShikakuScreen
 import com.github.mantis133.puzzleapp.ui.screens.stats.StatsScreen
 import kotlinx.coroutines.launch
@@ -28,6 +30,7 @@ import kotlinx.coroutines.launch
 sealed class Screen(val route: String) {
     data object Home    : Screen("home")
     data object Stats   : Screen("stats")
+    data object Chess   : Screen("chess")
     data object Shikaku : Screen("shikaku/{difficulty}") {
         fun createRoute(difficulty: Difficulty) = "shikaku/${difficulty.toNavArg()}"
     }
@@ -102,6 +105,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     onNavigateToShikaku = { difficulty ->
                         navController.navigate(Screen.Shikaku.createRoute(difficulty))
                     },
+                    onNavigateToChess = { navController.navigate(Screen.Chess.route) },
                     onOpenDrawer = { scope.launch { drawerState.open() } }
                 )
             }
@@ -110,6 +114,10 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 StatsScreen(
                     onOpenDrawer = { scope.launch { drawerState.open() } }
                 )
+            }
+
+            composable(Screen.Chess.route) {
+                ChessPuzzleScreen(onNavigateBack = { navController.popBackStack() })
             }
 
             composable(
