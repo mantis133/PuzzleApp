@@ -85,6 +85,7 @@ fun SudokuScreen(
                         SudokuBoardView(
                             board          = state.board!!,
                             playerGrid     = state.playerGrid,
+                            notes          = state.notes,
                             errors         = state.errors,
                             selectedCell   = state.selectedCell,
                             onCellSelected = { viewModel.selectCell(it) },
@@ -96,11 +97,24 @@ fun SudokuScreen(
 
                         Spacer(Modifier.height(8.dp))
 
+                        // ── Notes mode toggle ─────────────────────────────────
+                        NotesModeToggle(
+                            isNotesMode = state.isNotesMode,
+                            enabled     = !state.isComplete,
+                            onToggle    = { viewModel.toggleNotesMode() },
+                            modifier    = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                        )
+
+                        Spacer(Modifier.height(4.dp))
+
                         // ── Number pad ────────────────────────────────────────
                         NumberPad(
-                            enabled   = !state.isComplete,
-                            onDigit   = { viewModel.enterDigit(it) },
-                            onErase   = { viewModel.eraseCell() },
+                            enabled     = !state.isComplete,
+                            isNotesMode = state.isNotesMode,
+                            onDigit     = { viewModel.enterDigit(it) },
+                            onErase     = { viewModel.eraseCell() },
                             modifier  = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp)
@@ -162,14 +176,47 @@ fun SudokuScreen(
     }
 }
 
+// ── Notes mode toggle ─────────────────────────────────────────────────────────
+
+@Composable
+private fun NotesModeToggle(
+    isNotesMode: Boolean,
+    enabled:     Boolean,
+    onToggle:    () -> Unit,
+    modifier:    Modifier = Modifier
+) {
+    Row(
+        modifier              = modifier,
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment     = Alignment.CenterVertically
+    ) {
+        Text(
+            text  = "Notes",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        if (isNotesMode) {
+            Button(onClick = onToggle, enabled = enabled) {
+                Text("✏ On")
+            }
+        } else {
+            OutlinedButton(onClick = onToggle, enabled = enabled) {
+                Text("✏ Off")
+            }
+        }
+    }
+}
+
 // ── Number pad ────────────────────────────────────────────────────────────────
 
 @Composable
 private fun NumberPad(
-    enabled:  Boolean,
-    onDigit:  (Int) -> Unit,
-    onErase:  () -> Unit,
-    modifier: Modifier = Modifier
+    enabled:     Boolean,
+    isNotesMode: Boolean,
+    onDigit:     (Int) -> Unit,
+    onErase:     () -> Unit,
+    modifier:    Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         // Row 1: digits 1–5
@@ -178,8 +225,8 @@ private fun NumberPad(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             for (d in 1..5) {
-                DigitButton(digit = d, enabled = enabled, onClick = { onDigit(d) },
-                    modifier = Modifier.weight(1f))
+                DigitButton(digit = d, enabled = enabled, isNotesMode = isNotesMode,
+                    onClick = { onDigit(d) }, modifier = Modifier.weight(1f))
             }
         }
         // Row 2: digits 6–9 + erase
@@ -188,12 +235,12 @@ private fun NumberPad(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             for (d in 6..9) {
-                DigitButton(digit = d, enabled = enabled, onClick = { onDigit(d) },
-                    modifier = Modifier.weight(1f))
+                DigitButton(digit = d, enabled = enabled, isNotesMode = isNotesMode,
+                    onClick = { onDigit(d) }, modifier = Modifier.weight(1f))
             }
             FilledTonalButton(
                 onClick  = onErase,
-                enabled  = enabled,
+                enabled  = enabled && !isNotesMode,  // Erase disabled in notes mode
                 modifier = Modifier.weight(1f).height(52.dp)
             ) {
                 Text("⌫", style = MaterialTheme.typography.titleMedium)
@@ -204,21 +251,37 @@ private fun NumberPad(
 
 @Composable
 private fun DigitButton(
-    digit:    Int,
-    enabled:  Boolean,
-    onClick:  () -> Unit,
-    modifier: Modifier = Modifier
+    digit:       Int,
+    enabled:     Boolean,
+    isNotesMode: Boolean,
+    onClick:     () -> Unit,
+    modifier:    Modifier = Modifier
 ) {
-    FilledTonalButton(
-        onClick  = onClick,
-        enabled  = enabled,
-        modifier = modifier.height(52.dp)
-    ) {
-        Text(
-            text      = digit.toString(),
-            style     = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+    if (isNotesMode) {
+        // Outlined style in notes mode to visually distinguish from digit mode
+        OutlinedButton(
+            onClick  = onClick,
+            enabled  = enabled,
+            modifier = modifier.height(52.dp)
+        ) {
+            Text(
+                text       = digit.toString(),
+                style      = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    } else {
+        FilledTonalButton(
+            onClick  = onClick,
+            enabled  = enabled,
+            modifier = modifier.height(52.dp)
+        ) {
+            Text(
+                text       = digit.toString(),
+                style      = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 

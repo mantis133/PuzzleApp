@@ -26,6 +26,7 @@ private val ThickLine    = Color(0xFFD0B9FC)   // black 3×3 box borders
 private val OuterLine    = Color(0xFFD0B9FC)   // black outer border
 private val GivenColor   = android.graphics.Color.rgb(238, 238, 255)
 private val PlayerColor  = android.graphics.Color.rgb(120, 180, 255)
+private val NoteColor    = android.graphics.Color.rgb(140, 140, 190)
 private val ErrorColor   = android.graphics.Color.rgb(255, 100, 100)
 
 /**
@@ -40,6 +41,7 @@ private val ErrorColor   = android.graphics.Color.rgb(255, 100, 100)
 fun SudokuBoardView(
     board: SudokuBoard,
     playerGrid: List<Int>,
+    notes: List<Set<Int>>,
     errors: Set<Int>,
     selectedCell: Int,
     onCellSelected: (Int) -> Unit,
@@ -136,10 +138,39 @@ fun SudokuBoardView(
                     }
 
                     val cx = (col + 0.5f) * cellSize
-                    // Vertically centre: shift up by half the total text height
                     val cy = (row + 0.5f) * cellSize - (p.descent() + p.ascent()) / 2f
-
                     canvas.nativeCanvas.drawText(digit.toString(), cx, cy, p)
+                }
+            }
+        }
+
+        // ── Pencil marks (notes) ──────────────────────────────────────────────
+        drawIntoCanvas { canvas ->
+            val notePaint = android.graphics.Paint().apply {
+                isAntiAlias = true
+                textAlign   = android.graphics.Paint.Align.CENTER
+                textSize    = cellSize * 0.27f
+                color       = NoteColor
+            }
+            // Each cell is divided into a 3×3 mini grid.
+            // Digit d occupies mini-row (d-1)/3, mini-col (d-1)%3.
+            val third = cellSize / 3f
+            for (row in 0 until 9) {
+                for (col in 0 until 9) {
+                    val pos = row * 9 + col
+                    if (playerGrid[pos] != 0) continue   // Cell has a digit — no notes shown
+                    val cellNotes = notes[pos]
+                    if (cellNotes.isEmpty()) continue
+
+                    for (digit in 1..9) {
+                        if (digit !in cellNotes) continue
+                        val nr = (digit - 1) / 3          // mini row 0-2
+                        val nc = (digit - 1) % 3          // mini col 0-2
+                        val nx = (col * cellSize) + (nc + 0.5f) * third
+                        val ny = (row * cellSize) + (nr + 0.5f) * third -
+                                 (notePaint.descent() + notePaint.ascent()) / 2f
+                        canvas.nativeCanvas.drawText(digit.toString(), nx, ny, notePaint)
+                    }
                 }
             }
         }
