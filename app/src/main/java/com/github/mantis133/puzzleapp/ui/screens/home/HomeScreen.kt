@@ -23,6 +23,7 @@ private val CUSTOM_SENTINEL: Difficulty = Difficulty.Custom(6, 6)
 @Composable
 fun HomeScreen(
     onNavigateToShikaku: (Difficulty) -> Unit,
+    onNavigateToSudoku:  (Difficulty) -> Unit,
     onNavigateToChess: () -> Unit,
     onOpenDrawer: () -> Unit
 ) {
@@ -63,6 +64,7 @@ fun HomeScreen(
             }
 
             item { PuzzleCard(info = PuzzleTypes.SHIKAKU, onPlay = onNavigateToShikaku) }
+            item { SudokuCard(onPlay = onNavigateToSudoku) }
             item {
                 ChessCard(onPlay = onNavigateToChess)
             }
@@ -179,6 +181,58 @@ private fun PuzzleCard(
             ) {
                 Text("Play")
             }
+        }
+    }
+}
+
+@Composable
+private fun SudokuCard(onPlay: (Difficulty) -> Unit) {
+    val info = PuzzleTypes.SUDOKU
+    var selectedDifficulty by remember { mutableStateOf<Difficulty>(Difficulty.Easy) }
+
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+
+            // ── Header ───────────────────────────────────────────────────────
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = info.emoji, style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(info.displayName, style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(2.dp))
+                    Text(info.description, style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // ── Difficulty (Easy / Medium / Hard only — grid is always 9×9) ─
+            Text(text  = "Difficulty", style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                Difficulty.presets.forEachIndexed { index, slot ->
+                    SegmentedButton(
+                        selected = selectedDifficulty::class == slot::class,
+                        onClick  = { selectedDifficulty = slot },
+                        shape    = SegmentedButtonDefaults.itemShape(index, Difficulty.presets.size)
+                    ) { Text(slot.displayName) }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Text(text  = "Always a 9 × 9 grid",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick  = { onPlay(selectedDifficulty) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Play") }
         }
     }
 }

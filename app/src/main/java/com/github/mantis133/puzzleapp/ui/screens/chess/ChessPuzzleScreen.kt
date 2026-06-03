@@ -139,7 +139,7 @@ fun ChessPuzzleScreen(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                         ) {
                             Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🎉 Puzzle Solved!", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(" Puzzle Solved!", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.height(8.dp))
                                 Button(onClick = { viewModel.loadNextPuzzle() }) { Text("Next Puzzle") }
                             }

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mantis133.puzzleapp.data.ShikakuStats
 import com.github.mantis133.puzzleapp.data.StatsRepository
+import com.github.mantis133.puzzleapp.data.SudokuStats
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -14,9 +15,15 @@ class StatsViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = StatsRepository(application)
 
     val shikakuStats: StateFlow<ShikakuStats> = repo.shikakuStats.stateIn(
-        scope          = viewModelScope,
-        started        = SharingStarted.WhileSubscribed(5_000),
-        initialValue   = ShikakuStats()
+        scope        = viewModelScope,
+        started      = SharingStarted.WhileSubscribed(5_000),
+        initialValue = ShikakuStats()
+    )
+
+    val sudokuStats: StateFlow<SudokuStats> = repo.sudokuStats.stateIn(
+        scope        = viewModelScope,
+        started      = SharingStarted.WhileSubscribed(5_000),
+        initialValue = SudokuStats()
     )
 }
 

@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mantis133.puzzleapp.data.DifficultyStats
 import com.github.mantis133.puzzleapp.data.ShikakuStats
+import com.github.mantis133.puzzleapp.data.SudokuStats
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,6 +22,7 @@ fun StatsScreen(
     viewModel: StatsViewModel = viewModel()
 ) {
     val shikakuStats by viewModel.shikakuStats.collectAsState()
+    val sudokuStats  by viewModel.sudokuStats.collectAsState()
 
     Scaffold(
         topBar = {
@@ -59,6 +61,7 @@ fun StatsScreen(
             }
 
             item { ShikakuStatsCard(stats = shikakuStats) }
+            item { SudokuStatsCard(stats = sudokuStats) }
         }
     }
 }
@@ -141,6 +144,48 @@ private fun StatsRow(label: String, value: String) {
             style      = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+@Composable
+private fun SudokuStatsCard(stats: SudokuStats) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("🔢", style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Text(
+                    text       = "Sudoku",
+                    style      = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            StatsSectionHeader(icon = "⚡", title = "Fastest Completion")
+            Spacer(Modifier.height(8.dp))
+            StatsRow("Easy",   formatTime(stats.easy.fastestSeconds))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Medium", formatTime(stats.medium.fastestSeconds))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Hard",   formatTime(stats.hard.fastestSeconds))
+
+            Spacer(Modifier.height(20.dp))
+
+            StatsSectionHeader(icon = "✓", title = "Games Completed")
+            Spacer(Modifier.height(8.dp))
+            StatsRow("Easy",   stats.easy.completedCount.toString())
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Medium", stats.medium.completedCount.toString())
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Hard",   stats.hard.completedCount.toString())
+        }
     }
 }
 

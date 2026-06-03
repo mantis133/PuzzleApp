@@ -23,6 +23,13 @@ object PuzzleTypes {
         emoji       = "♟"
     )
 
-    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU, CHESS)
+    val SUDOKU = PuzzleTypeInfo(
+        id          = "sudoku",
+        displayName = "Sudoku",
+        description = "Fill the 9×9 grid so every row, column, and 3×3 box contains each digit 1–9.",
+        emoji       = "🔢"
+    )
+
+    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU, SUDOKU, CHESS)
 }
 
