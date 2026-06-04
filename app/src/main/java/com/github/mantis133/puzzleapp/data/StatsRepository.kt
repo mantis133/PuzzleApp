@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.github.mantis133.puzzleapp.puzzle.core.Difficulty
+import com.github.mantis133.puzzleapp.puzzle.minesweeper.MinesweeperDifficulty
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -34,6 +35,15 @@ private object Keys {
     val SUDOKU_COMPLETED_EASY   = intPreferencesKey("sudoku_completed_easy")
     val SUDOKU_COMPLETED_MEDIUM = intPreferencesKey("sudoku_completed_medium")
     val SUDOKU_COMPLETED_HARD   = intPreferencesKey("sudoku_completed_hard")
+
+    // Minesweeper — fastest win times in seconds
+    val MSW_FASTEST_BEGINNER      = longPreferencesKey("msw_fastest_beginner")
+    val MSW_FASTEST_INTERMEDIATE  = longPreferencesKey("msw_fastest_intermediate")
+    val MSW_FASTEST_EXPERT        = longPreferencesKey("msw_fastest_expert")
+    // Minesweeper — win counts
+    val MSW_WINS_BEGINNER         = intPreferencesKey("msw_wins_beginner")
+    val MSW_WINS_INTERMEDIATE     = intPreferencesKey("msw_wins_intermediate")
+    val MSW_WINS_EXPERT           = intPreferencesKey("msw_wins_expert")
 }
 
 // ── Data models ───────────────────────────────────────────────────────────────
@@ -54,6 +64,12 @@ data class SudokuStats(
     val easy:   DifficultyStats = DifficultyStats(),
     val medium: DifficultyStats = DifficultyStats(),
     val hard:   DifficultyStats = DifficultyStats()
+)
+
+data class MinesweeperStats(
+    val beginner:     DifficultyStats = DifficultyStats(),
+    val intermediate: DifficultyStats = DifficultyStats(),
+    val expert:       DifficultyStats = DifficultyStats()
 )
 
 // ── Repository ────────────────────────────────────────────────────────────────
@@ -94,6 +110,23 @@ class StatsRepository(private val context: Context) {
         )
     }
 
+    val minesweeperStats: Flow<MinesweeperStats> = context.appDataStore.data.map { prefs ->
+        MinesweeperStats(
+            beginner     = DifficultyStats(
+                fastestSeconds = prefs[Keys.MSW_FASTEST_BEGINNER],
+                completedCount = prefs[Keys.MSW_WINS_BEGINNER] ?: 0
+            ),
+            intermediate = DifficultyStats(
+                fastestSeconds = prefs[Keys.MSW_FASTEST_INTERMEDIATE],
+                completedCount = prefs[Keys.MSW_WINS_INTERMEDIATE] ?: 0
+            ),
+            expert       = DifficultyStats(
+                fastestSeconds = prefs[Keys.MSW_FASTEST_EXPERT],
+                completedCount = prefs[Keys.MSW_WINS_EXPERT] ?: 0
+            )
+        )
+    }
+
     /**
      * Records a completed Shikaku game. Custom difficulty games are ignored.
      */
@@ -125,6 +158,23 @@ class StatsRepository(private val context: Context) {
             val current = prefs[fastestKey]
             if (current == null || elapsedSeconds < current) prefs[fastestKey] = elapsedSeconds
             prefs[completedKey] = (prefs[completedKey] ?: 0) + 1
+        }
+    }
+
+    /** Records a won Minesweeper game. */
+    suspend fun recordMinesweeperWin(difficulty: MinesweeperDifficulty, elapsedSeconds: Long) {
+        val (fastestKey, winsKey) = when (difficulty) {
+            MinesweeperDifficulty.BEGINNER     ->
+                Keys.MSW_FASTEST_BEGINNER     to Keys.MSW_WINS_BEGINNER
+            MinesweeperDifficulty.INTERMEDIATE ->
+                Keys.MSW_FASTEST_INTERMEDIATE to Keys.MSW_WINS_INTERMEDIATE
+            MinesweeperDifficulty.EXPERT       ->
+                Keys.MSW_FASTEST_EXPERT       to Keys.MSW_WINS_EXPERT
+        }
+        context.appDataStore.edit { prefs ->
+            val current = prefs[fastestKey]
+            if (current == null || elapsedSeconds < current) prefs[fastestKey] = elapsedSeconds
+            prefs[winsKey] = (prefs[winsKey] ?: 0) + 1
         }
     }
 }

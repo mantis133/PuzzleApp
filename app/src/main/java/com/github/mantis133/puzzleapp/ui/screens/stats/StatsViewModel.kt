@@ -3,6 +3,7 @@ package com.github.mantis133.puzzleapp.ui.screens.stats
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.mantis133.puzzleapp.data.MinesweeperStats
 import com.github.mantis133.puzzleapp.data.ShikakuStats
 import com.github.mantis133.puzzleapp.data.StatsRepository
 import com.github.mantis133.puzzleapp.data.SudokuStats
@@ -25,5 +26,10 @@ class StatsViewModel(application: Application) : AndroidViewModel(application) {
         started      = SharingStarted.WhileSubscribed(5_000),
         initialValue = SudokuStats()
     )
-}
 
+    val minesweeperStats: StateFlow<MinesweeperStats> = repo.minesweeperStats.stateIn(
+        scope        = viewModelScope,
+        started      = SharingStarted.WhileSubscribed(5_000),
+        initialValue = MinesweeperStats()
+    )
+}

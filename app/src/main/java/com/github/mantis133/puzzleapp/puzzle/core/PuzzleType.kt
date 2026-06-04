@@ -30,6 +30,13 @@ object PuzzleTypes {
         emoji       = "🔢"
     )
 
-    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU, SUDOKU, CHESS)
+    val MINESWEEPER = PuzzleTypeInfo(
+        id          = "minesweeper",
+        displayName = "Minesweeper",
+        description = "Uncover every safe cell without detonating a mine. Tap a cell for dig/flag options.",
+        emoji       = "💣"
+    )
+
+    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU, SUDOKU, CHESS, MINESWEEPER)
 }
 

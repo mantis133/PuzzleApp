@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.github.mantis133.puzzleapp.puzzle.core.Difficulty
 import com.github.mantis133.puzzleapp.puzzle.core.PuzzleTypeInfo
 import com.github.mantis133.puzzleapp.puzzle.core.PuzzleTypes
+import com.github.mantis133.puzzleapp.puzzle.minesweeper.MinesweeperDifficulty
 
 // Sentinel used to track that the user selected the Custom slot in the segmented button.
 private val CUSTOM_SENTINEL: Difficulty = Difficulty.Custom(6, 6)
@@ -22,9 +23,10 @@ private val CUSTOM_SENTINEL: Difficulty = Difficulty.Custom(6, 6)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToShikaku: (Difficulty) -> Unit,
-    onNavigateToSudoku:  (Difficulty) -> Unit,
-    onNavigateToChess: () -> Unit,
+    onNavigateToShikaku:     (Difficulty) -> Unit,
+    onNavigateToSudoku:      (Difficulty) -> Unit,
+    onNavigateToChess:       () -> Unit,
+    onNavigateToMinesweeper: (MinesweeperDifficulty) -> Unit,
     onOpenDrawer: () -> Unit
 ) {
     Scaffold(
@@ -65,9 +67,8 @@ fun HomeScreen(
 
             item { PuzzleCard(info = PuzzleTypes.SHIKAKU, onPlay = onNavigateToShikaku) }
             item { SudokuCard(onPlay = onNavigateToSudoku) }
-            item {
-                ChessCard(onPlay = onNavigateToChess)
-            }
+            item { ChessCard(onPlay = onNavigateToChess) }
+            item { MinesweeperCard(onPlay = onNavigateToMinesweeper) }
         }
     }
 }
@@ -254,6 +255,73 @@ private fun ChessCard(onPlay: () -> Unit) {
             }
             Spacer(Modifier.height(16.dp))
             Button(onClick = onPlay, modifier = Modifier.fillMaxWidth()) { Text("Play") }
+        }
+    }
+}
+
+@Composable
+private fun MinesweeperCard(onPlay: (MinesweeperDifficulty) -> Unit) {
+    val info = PuzzleTypes.MINESWEEPER
+    var selectedDifficulty by remember { mutableStateOf(MinesweeperDifficulty.BEGINNER) }
+
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+
+            // ── Header ───────────────────────────────────────────────────────
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = info.emoji, style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(
+                        info.displayName,
+                        style      = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        info.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // ── Difficulty selector ───────────────────────────────────────────
+            Text(
+                text  = "Difficulty",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(8.dp))
+
+            val presets = MinesweeperDifficulty.entries
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                presets.forEachIndexed { index, preset ->
+                    SegmentedButton(
+                        selected = selectedDifficulty == preset,
+                        onClick  = { selectedDifficulty = preset },
+                        shape    = SegmentedButtonDefaults.itemShape(index, presets.size)
+                    ) { Text(preset.displayName) }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── Grid info ─────────────────────────────────────────────────────
+            Text(
+                text  = "${selectedDifficulty.rows}×${selectedDifficulty.cols} grid · ${selectedDifficulty.mineCount} mines",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick  = { onPlay(selectedDifficulty) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Play") }
         }
     }
 }

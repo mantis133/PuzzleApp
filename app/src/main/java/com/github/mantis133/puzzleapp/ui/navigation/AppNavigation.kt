@@ -20,8 +20,10 @@ import androidx.navigation.navArgument
 import com.github.mantis133.puzzleapp.puzzle.core.Difficulty
 import com.github.mantis133.puzzleapp.puzzle.core.difficultyFromNavArg
 import com.github.mantis133.puzzleapp.puzzle.core.toNavArg
+import com.github.mantis133.puzzleapp.puzzle.minesweeper.MinesweeperDifficulty
 import com.github.mantis133.puzzleapp.ui.screens.home.HomeScreen
 import com.github.mantis133.puzzleapp.ui.screens.chess.ChessPuzzleScreen
+import com.github.mantis133.puzzleapp.ui.screens.minesweeper.MinesweeperScreen
 import com.github.mantis133.puzzleapp.ui.screens.shikaku.ShikakuScreen
 import com.github.mantis133.puzzleapp.ui.screens.stats.StatsScreen
 import com.github.mantis133.puzzleapp.ui.screens.sudoku.SudokuScreen
@@ -37,6 +39,9 @@ sealed class Screen(val route: String) {
     data object Sudoku  : Screen("sudoku/{difficulty}") {
         fun createRoute(difficulty: Difficulty) = "sudoku/${difficulty.toNavArg()}"
     }
+    data object Minesweeper : Screen("minesweeper/{difficulty}") {
+        fun createRoute(difficulty: MinesweeperDifficulty) = "minesweeper/${difficulty.toNavArg()}"
+    }
 }
 
 @Composable
@@ -48,8 +53,9 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
     val currentRoute   = backStackEntry?.destination?.route
 
     // Disable swipe-to-open on game screens so it doesn't fight drag/tap gestures.
-    val isGameScreen = currentRoute?.startsWith("shikaku/") == true ||
-                       currentRoute?.startsWith("sudoku/")  == true
+    val isGameScreen = currentRoute?.startsWith("shikaku/")     == true ||
+                       currentRoute?.startsWith("sudoku/")      == true ||
+                       currentRoute?.startsWith("minesweeper/") == true
 
     ModalNavigationDrawer(
         drawerState    = drawerState,
@@ -106,13 +112,16 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
 
             composable(Screen.Home.route) {
                 HomeScreen(
-                    onNavigateToShikaku = { difficulty ->
+                    onNavigateToShikaku     = { difficulty ->
                         navController.navigate(Screen.Shikaku.createRoute(difficulty))
                     },
-                    onNavigateToSudoku = { difficulty ->
+                    onNavigateToSudoku      = { difficulty ->
                         navController.navigate(Screen.Sudoku.createRoute(difficulty))
                     },
-                    onNavigateToChess = { navController.navigate(Screen.Chess.route) },
+                    onNavigateToChess       = { navController.navigate(Screen.Chess.route) },
+                    onNavigateToMinesweeper = { difficulty ->
+                        navController.navigate(Screen.Minesweeper.createRoute(difficulty))
+                    },
                     onOpenDrawer = { scope.launch { drawerState.open() } }
                 )
             }
@@ -146,6 +155,18 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 val arg        = backEntry.arguments?.getString("difficulty") ?: "EASY"
                 val difficulty = difficultyFromNavArg(arg)
                 SudokuScreen(
+                    difficulty     = difficulty,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route     = Screen.Minesweeper.route,
+                arguments = listOf(navArgument("difficulty") { type = NavType.StringType })
+            ) { backEntry ->
+                val arg        = backEntry.arguments?.getString("difficulty") ?: "BEGINNER"
+                val difficulty = MinesweeperDifficulty.fromNavArg(arg)
+                MinesweeperScreen(
                     difficulty     = difficulty,
                     onNavigateBack = { navController.popBackStack() }
                 )
