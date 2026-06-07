@@ -43,8 +43,10 @@ jobs:
         run: |
           set -euo pipefail
           METADATA="app/build/outputs/apk/debug/output-metadata.json"
-          VERSION_NAME=$(python -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["elements"][0].get("versionName",""))' "$METADATA")
-          VERSION_CODE=$(python -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["elements"][0].get("versionCode",""))' "$METADATA")
+          [[ -f "$METADATA" ]] || { echo "::error::Missing $METADATA (did Gradle produce an APK?)"; exit 1; }
+          VERSION_NAME=$(python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["elements"][0].get("versionName",""))' "$METADATA")
+          VERSION_CODE=$(python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["elements"][0].get("versionCode",""))' "$METADATA")
+          [[ -n "$VERSION_NAME" && -n "$VERSION_CODE" ]] || { echo "::error::Failed to read versionName/versionCode from $METADATA"; exit 1; }
           SHORT_SHA="${GITHUB_SHA::7}"
           TAG="v${VERSION_NAME}-${VERSION_CODE}+${SHORT_SHA}"
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
