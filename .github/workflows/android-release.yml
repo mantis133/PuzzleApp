@@ -55,8 +55,8 @@ jobs:
           echo "apk_name=PuzzleApp-${VERSION_NAME}-debug.apk" >> "$GITHUB_OUTPUT"
       - name: Rename APK
         run: |
-          mv app/build/outputs/apk/debug/app-debug.apk \
-             app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}
+          mv "app/build/outputs/apk/debug/app-debug.apk" \
+             "app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
