@@ -41,8 +41,8 @@ jobs:
       - name: Get version info
         id: version
         run: |
-          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
-          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | head -1 | sed 's/[^0-9]*//g')
+          VERSION_NAME=$(./gradlew -q app:properties --no-daemon 2>/dev/null | grep "^versionName:" | awk '{print $2}')
+          VERSION_CODE=$(./gradlew -q app:properties --no-daemon 2>/dev/null | grep "^versionCode:" | awk '{print $2}')
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           TAG="v${VERSION_NAME}-${VERSION_CODE}+${SHORT_SHA}"
           echo "version_name=${VERSION_NAME}" >> $GITHUB_OUTPUT
@@ -56,7 +56,7 @@ jobs:
              app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: PuzzleApp ${{ steps.version.outputs.version_name }} (build ${{ steps.version.outputs.version_code }})
