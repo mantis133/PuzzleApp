@@ -27,6 +27,7 @@ import com.github.mantis133.puzzleapp.ui.screens.minesweeper.MinesweeperScreen
 import com.github.mantis133.puzzleapp.ui.screens.shikaku.ShikakuScreen
 import com.github.mantis133.puzzleapp.ui.screens.stats.StatsScreen
 import com.github.mantis133.puzzleapp.ui.screens.sudoku.SudokuScreen
+import com.github.mantis133.puzzleapp.ui.screens.wires.WiresScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -42,6 +43,9 @@ sealed class Screen(val route: String) {
     data object Minesweeper : Screen("minesweeper/{difficulty}") {
         fun createRoute(difficulty: MinesweeperDifficulty) = "minesweeper/${difficulty.toNavArg()}"
     }
+    data object Wires : Screen("wires/{difficulty}") {
+        fun createRoute(difficulty: Difficulty) = "wires/${difficulty.toNavArg()}"
+    }
 }
 
 @Composable
@@ -55,7 +59,8 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
     // Disable swipe-to-open on game screens so it doesn't fight drag/tap gestures.
     val isGameScreen = currentRoute?.startsWith("shikaku/")     == true ||
                        currentRoute?.startsWith("sudoku/")      == true ||
-                       currentRoute?.startsWith("minesweeper/") == true
+                       currentRoute?.startsWith("minesweeper/") == true ||
+                       currentRoute?.startsWith("wires/")       == true
 
     ModalNavigationDrawer(
         drawerState    = drawerState,
@@ -122,6 +127,9 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     onNavigateToMinesweeper = { difficulty ->
                         navController.navigate(Screen.Minesweeper.createRoute(difficulty))
                     },
+                    onNavigateToWires       = { difficulty ->
+                        navController.navigate(Screen.Wires.createRoute(difficulty))
+                    },
                     onOpenDrawer = { scope.launch { drawerState.open() } }
                 )
             }
@@ -167,6 +175,18 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                 val arg        = backEntry.arguments?.getString("difficulty") ?: "BEGINNER"
                 val difficulty = MinesweeperDifficulty.fromNavArg(arg)
                 MinesweeperScreen(
+                    difficulty     = difficulty,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route     = Screen.Wires.route,
+                arguments = listOf(navArgument("difficulty") { type = NavType.StringType })
+            ) { backEntry ->
+                val arg        = backEntry.arguments?.getString("difficulty") ?: "EASY"
+                val difficulty = difficultyFromNavArg(arg)
+                WiresScreen(
                     difficulty     = difficulty,
                     onNavigateBack = { navController.popBackStack() }
                 )

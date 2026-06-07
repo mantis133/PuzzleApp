@@ -44,6 +44,15 @@ private object Keys {
     val MSW_WINS_BEGINNER         = intPreferencesKey("msw_wins_beginner")
     val MSW_WINS_INTERMEDIATE     = intPreferencesKey("msw_wins_intermediate")
     val MSW_WINS_EXPERT           = intPreferencesKey("msw_wins_expert")
+
+    // Wires — fastest solve times in seconds
+    val WIRES_FASTEST_EASY   = longPreferencesKey("wires_fastest_easy")
+    val WIRES_FASTEST_MEDIUM = longPreferencesKey("wires_fastest_medium")
+    val WIRES_FASTEST_HARD   = longPreferencesKey("wires_fastest_hard")
+    // Wires — completed game counts
+    val WIRES_COMPLETED_EASY   = intPreferencesKey("wires_completed_easy")
+    val WIRES_COMPLETED_MEDIUM = intPreferencesKey("wires_completed_medium")
+    val WIRES_COMPLETED_HARD   = intPreferencesKey("wires_completed_hard")
 }
 
 // ── Data models ───────────────────────────────────────────────────────────────
@@ -70,6 +79,12 @@ data class MinesweeperStats(
     val beginner:     DifficultyStats = DifficultyStats(),
     val intermediate: DifficultyStats = DifficultyStats(),
     val expert:       DifficultyStats = DifficultyStats()
+)
+
+data class WiresStats(
+    val easy:   DifficultyStats = DifficultyStats(),
+    val medium: DifficultyStats = DifficultyStats(),
+    val hard:   DifficultyStats = DifficultyStats()
 )
 
 // ── Repository ────────────────────────────────────────────────────────────────
@@ -127,6 +142,23 @@ class StatsRepository(private val context: Context) {
         )
     }
 
+    val wiresStats: Flow<WiresStats> = context.appDataStore.data.map { prefs ->
+        WiresStats(
+            easy   = DifficultyStats(
+                fastestSeconds = prefs[Keys.WIRES_FASTEST_EASY],
+                completedCount = prefs[Keys.WIRES_COMPLETED_EASY] ?: 0
+            ),
+            medium = DifficultyStats(
+                fastestSeconds = prefs[Keys.WIRES_FASTEST_MEDIUM],
+                completedCount = prefs[Keys.WIRES_COMPLETED_MEDIUM] ?: 0
+            ),
+            hard   = DifficultyStats(
+                fastestSeconds = prefs[Keys.WIRES_FASTEST_HARD],
+                completedCount = prefs[Keys.WIRES_COMPLETED_HARD] ?: 0
+            )
+        )
+    }
+
     /**
      * Records a completed Shikaku game. Custom difficulty games are ignored.
      */
@@ -175,6 +207,23 @@ class StatsRepository(private val context: Context) {
             val current = prefs[fastestKey]
             if (current == null || elapsedSeconds < current) prefs[fastestKey] = elapsedSeconds
             prefs[winsKey] = (prefs[winsKey] ?: 0) + 1
+        }
+    }
+
+    /**
+     * Records a completed Wires game. Custom difficulty games are ignored.
+     */
+    suspend fun recordWiresCompletion(difficulty: Difficulty, elapsedSeconds: Long) {
+        val (fastestKey, completedKey) = when (difficulty) {
+            is Difficulty.Easy   -> Keys.WIRES_FASTEST_EASY   to Keys.WIRES_COMPLETED_EASY
+            is Difficulty.Medium -> Keys.WIRES_FASTEST_MEDIUM to Keys.WIRES_COMPLETED_MEDIUM
+            is Difficulty.Hard   -> Keys.WIRES_FASTEST_HARD   to Keys.WIRES_COMPLETED_HARD
+            is Difficulty.Custom -> return
+        }
+        context.appDataStore.edit { prefs ->
+            val current = prefs[fastestKey]
+            if (current == null || elapsedSeconds < current) prefs[fastestKey] = elapsedSeconds
+            prefs[completedKey] = (prefs[completedKey] ?: 0) + 1
         }
     }
 }

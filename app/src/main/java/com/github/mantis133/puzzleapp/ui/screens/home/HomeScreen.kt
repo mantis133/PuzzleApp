@@ -16,6 +16,8 @@ import com.github.mantis133.puzzleapp.puzzle.core.Difficulty
 import com.github.mantis133.puzzleapp.puzzle.core.PuzzleTypeInfo
 import com.github.mantis133.puzzleapp.puzzle.core.PuzzleTypes
 import com.github.mantis133.puzzleapp.puzzle.minesweeper.MinesweeperDifficulty
+import com.github.mantis133.puzzleapp.puzzle.wires.WireColor
+import com.github.mantis133.puzzleapp.ui.screens.wires.toComposeColor
 
 // Sentinel used to track that the user selected the Custom slot in the segmented button.
 private val CUSTOM_SENTINEL: Difficulty = Difficulty.Custom(6, 6)
@@ -27,6 +29,7 @@ fun HomeScreen(
     onNavigateToSudoku:      (Difficulty) -> Unit,
     onNavigateToChess:       () -> Unit,
     onNavigateToMinesweeper: (MinesweeperDifficulty) -> Unit,
+    onNavigateToWires:       (Difficulty) -> Unit,
     onOpenDrawer: () -> Unit
 ) {
     Scaffold(
@@ -69,6 +72,7 @@ fun HomeScreen(
             item { SudokuCard(onPlay = onNavigateToSudoku) }
             item { ChessCard(onPlay = onNavigateToChess) }
             item { MinesweeperCard(onPlay = onNavigateToMinesweeper) }
+            item { WiresCard(onPlay = onNavigateToWires) }
         }
     }
 }
@@ -360,6 +364,97 @@ private fun DimensionStepper(
                 enabled  = value < max,
                 modifier = Modifier.size(36.dp)
             ) { Text("+") }
+        }
+    }
+}
+
+@Composable
+private fun WiresCard(onPlay: (Difficulty) -> Unit) {
+    val info = PuzzleTypes.WIRES
+    var selectedDifficulty by remember { mutableStateOf<Difficulty>(Difficulty.Easy) }
+
+    // Preview dot colours — use the first few wire colours
+    val dotColors = listOf(
+        WireColor.RED, WireColor.BLUE, WireColor.GREEN, WireColor.YELLOW,
+        WireColor.ORANGE, WireColor.PURPLE
+    )
+
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+
+            // ── Header ───────────────────────────────────────────────────────
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = info.emoji, style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text       = info.displayName,
+                        style      = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text  = info.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // ── Difficulty selector ───────────────────────────────────────────
+            Text(
+                text  = "Difficulty",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(8.dp))
+
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                Difficulty.presets.forEachIndexed { index, preset ->
+                    SegmentedButton(
+                        selected = selectedDifficulty::class == preset::class,
+                        onClick  = { selectedDifficulty = preset },
+                        shape    = SegmentedButtonDefaults.itemShape(index, Difficulty.presets.size)
+                    ) { Text(preset.displayName) }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── Grid / colour-pair hint ───────────────────────────────────────
+            val pairCount = when (selectedDifficulty) {
+                is Difficulty.Easy   -> 4
+                is Difficulty.Medium -> 6
+                else                 -> 8
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text  = "${selectedDifficulty.rows} × ${selectedDifficulty.cols} grid · $pairCount colour pairs",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(8.dp))
+                // Small colour swatches
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    dotColors.take(pairCount).forEach { wc ->
+                        androidx.compose.foundation.Canvas(
+                            modifier = Modifier.size(12.dp)
+                        ) {
+                            drawCircle(color = wc.toComposeColor())
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick  = { onPlay(selectedDifficulty) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Play") }
         }
     }
 }

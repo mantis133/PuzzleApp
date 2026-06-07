@@ -15,6 +15,7 @@ import com.github.mantis133.puzzleapp.data.DifficultyStats
 import com.github.mantis133.puzzleapp.data.MinesweeperStats
 import com.github.mantis133.puzzleapp.data.ShikakuStats
 import com.github.mantis133.puzzleapp.data.SudokuStats
+import com.github.mantis133.puzzleapp.data.WiresStats
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,9 +23,10 @@ fun StatsScreen(
     onOpenDrawer: () -> Unit,
     viewModel: StatsViewModel = viewModel()
 ) {
-    val shikakuStats    by viewModel.shikakuStats.collectAsState()
-    val sudokuStats     by viewModel.sudokuStats.collectAsState()
+    val shikakuStats     by viewModel.shikakuStats.collectAsState()
+    val sudokuStats      by viewModel.sudokuStats.collectAsState()
     val minesweeperStats by viewModel.minesweeperStats.collectAsState()
+    val wiresStats       by viewModel.wiresStats.collectAsState()
 
     Scaffold(
         topBar = {
@@ -65,6 +67,7 @@ fun StatsScreen(
             item { ShikakuStatsCard(stats = shikakuStats) }
             item { SudokuStatsCard(stats = sudokuStats) }
             item { MinesweeperStatsCard(stats = minesweeperStats) }
+            item { WiresStatsCard(stats = wiresStats) }
         }
     }
 }
@@ -198,6 +201,48 @@ private fun formatTime(seconds: Long?): String {
     val m = seconds / 60
     val s = seconds % 60
     return "%02d:%02d".format(m, s)
+}
+
+@Composable
+private fun WiresStatsCard(stats: WiresStats) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("🔌", style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Text(
+                    text       = "Wires",
+                    style      = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            StatsSectionHeader(icon = "⚡", title = "Fastest Completion")
+            Spacer(Modifier.height(8.dp))
+            StatsRow("Easy",   formatTime(stats.easy.fastestSeconds))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Medium", formatTime(stats.medium.fastestSeconds))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Hard",   formatTime(stats.hard.fastestSeconds))
+
+            Spacer(Modifier.height(20.dp))
+
+            StatsSectionHeader(icon = "✓", title = "Games Completed")
+            Spacer(Modifier.height(8.dp))
+            StatsRow("Easy",   stats.easy.completedCount.toString())
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Medium", stats.medium.completedCount.toString())
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant)
+            StatsRow("Hard",   stats.hard.completedCount.toString())
+        }
+    }
 }
 
 @Composable

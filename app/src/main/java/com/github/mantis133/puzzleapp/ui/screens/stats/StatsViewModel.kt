@@ -7,6 +7,7 @@ import com.github.mantis133.puzzleapp.data.MinesweeperStats
 import com.github.mantis133.puzzleapp.data.ShikakuStats
 import com.github.mantis133.puzzleapp.data.StatsRepository
 import com.github.mantis133.puzzleapp.data.SudokuStats
+import com.github.mantis133.puzzleapp.data.WiresStats
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -31,5 +32,11 @@ class StatsViewModel(application: Application) : AndroidViewModel(application) {
         scope        = viewModelScope,
         started      = SharingStarted.WhileSubscribed(5_000),
         initialValue = MinesweeperStats()
+    )
+
+    val wiresStats: StateFlow<WiresStats> = repo.wiresStats.stateIn(
+        scope        = viewModelScope,
+        started      = SharingStarted.WhileSubscribed(5_000),
+        initialValue = WiresStats()
     )
 }
