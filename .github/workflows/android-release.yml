@@ -1,0 +1,76 @@
+name: Android Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    name: Build & Publish APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Get version info
+        id: version
+        run: |
+          set -euo pipefail
+          METADATA="app/build/outputs/apk/debug/output-metadata.json"
+          [[ -f "$METADATA" ]] || { echo "::error::Missing $METADATA (did Gradle produce an APK?)"; exit 1; }
+          VERSION_NAME=$(python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["elements"][0].get("versionName",""))' "$METADATA")
+          VERSION_CODE=$(python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["elements"][0].get("versionCode",""))' "$METADATA")
+          [[ -n "$VERSION_NAME" && -n "$VERSION_CODE" ]] || { echo "::error::Failed to read versionName/versionCode from $METADATA"; exit 1; }
+          SHORT_SHA="${GITHUB_SHA::7}"
+          TAG="v${VERSION_NAME}-${VERSION_CODE}+${SHORT_SHA}"
+          echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "apk_name=PuzzleApp-${VERSION_NAME}-debug.apk" >> "$GITHUB_OUTPUT"
+      - name: Rename APK
+        run: |
+          mv "app/build/outputs/apk/debug/app-debug.apk" \
+             "app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: PuzzleApp ${{ steps.version.outputs.version_name }} (build ${{ steps.version.outputs.version_code }})
+          body: |
+            ## PuzzleApp ${{ steps.version.outputs.version_name }}
+
+            **Commit:** ${{ github.sha }}
+            **Build:** ${{ steps.version.outputs.version_code }}
+
+            ### Install
+            Download the APK below and install it on your Android device (API 24+).
+            You may need to enable *Install from unknown sources* in your device settings.
+          files: app/build/outputs/apk/debug/${{ steps.version.outputs.apk_name }}
+          generate_release_notes: true
