@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mantis133.puzzleapp.data.DifficultyStats
 import com.github.mantis133.puzzleapp.data.MinesweeperStats
 import com.github.mantis133.puzzleapp.data.ShikakuStats
+import com.github.mantis133.puzzleapp.data.SolitaireStats
 import com.github.mantis133.puzzleapp.data.SudokuStats
 import com.github.mantis133.puzzleapp.data.WiresStats
 
@@ -27,6 +28,7 @@ fun StatsScreen(
     val sudokuStats      by viewModel.sudokuStats.collectAsState()
     val minesweeperStats by viewModel.minesweeperStats.collectAsState()
     val wiresStats       by viewModel.wiresStats.collectAsState()
+    val solitaireStats   by viewModel.solitaireStats.collectAsState()
 
     Scaffold(
         topBar = {
@@ -68,6 +70,7 @@ fun StatsScreen(
             item { SudokuStatsCard(stats = sudokuStats) }
             item { MinesweeperStatsCard(stats = minesweeperStats) }
             item { WiresStatsCard(stats = wiresStats) }
+            item { SolitaireStatsCard(stats = solitaireStats) }
         }
     }
 }
@@ -287,5 +290,32 @@ private fun MinesweeperStatsCard(stats: MinesweeperStats) {
     }
 }
 
+@Composable
+private fun SolitaireStatsCard(stats: SolitaireStats) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
 
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("\uD83C\uDCCF", style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Text(
+                    text       = "Solitaire",
+                    style      = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
+            Spacer(Modifier.height(20.dp))
+
+            StatsSectionHeader(icon = "⚡", title = "Fastest Win")
+            Spacer(Modifier.height(8.dp))
+            StatsRow("All Time", formatTime(stats.fastestSeconds))
+
+            Spacer(Modifier.height(20.dp))
+
+            StatsSectionHeader(icon = "✓", title = "Games Won")
+            Spacer(Modifier.height(8.dp))
+            StatsRow("Total", stats.wins.toString())
+        }
+    }
+}

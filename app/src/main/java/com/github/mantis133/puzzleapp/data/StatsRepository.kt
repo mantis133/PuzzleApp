@@ -53,6 +53,10 @@ private object Keys {
     val WIRES_COMPLETED_EASY   = intPreferencesKey("wires_completed_easy")
     val WIRES_COMPLETED_MEDIUM = intPreferencesKey("wires_completed_medium")
     val WIRES_COMPLETED_HARD   = intPreferencesKey("wires_completed_hard")
+
+    // Solitaire — single mode
+    val SOLITAIRE_FASTEST_WIN = longPreferencesKey("solitaire_fastest_win")
+    val SOLITAIRE_WINS        = intPreferencesKey("solitaire_wins")
 }
 
 // ── Data models ───────────────────────────────────────────────────────────────
@@ -85,6 +89,11 @@ data class WiresStats(
     val easy:   DifficultyStats = DifficultyStats(),
     val medium: DifficultyStats = DifficultyStats(),
     val hard:   DifficultyStats = DifficultyStats()
+)
+
+data class SolitaireStats(
+    val fastestSeconds: Long? = null,
+    val wins: Int             = 0
 )
 
 // ── Repository ────────────────────────────────────────────────────────────────
@@ -159,6 +168,13 @@ class StatsRepository(private val context: Context) {
         )
     }
 
+    val solitaireStats: Flow<SolitaireStats> = context.appDataStore.data.map { prefs ->
+        SolitaireStats(
+            fastestSeconds = prefs[Keys.SOLITAIRE_FASTEST_WIN],
+            wins           = prefs[Keys.SOLITAIRE_WINS] ?: 0
+        )
+    }
+
     /**
      * Records a completed Shikaku game. Custom difficulty games are ignored.
      */
@@ -224,6 +240,15 @@ class StatsRepository(private val context: Context) {
             val current = prefs[fastestKey]
             if (current == null || elapsedSeconds < current) prefs[fastestKey] = elapsedSeconds
             prefs[completedKey] = (prefs[completedKey] ?: 0) + 1
+        }
+    }
+
+    /** Records a completed Solitaire game. */
+    suspend fun recordSolitaireWin(elapsedSeconds: Long) {
+        context.appDataStore.edit { prefs ->
+            val current = prefs[Keys.SOLITAIRE_FASTEST_WIN]
+            if (current == null || elapsedSeconds < current) prefs[Keys.SOLITAIRE_FASTEST_WIN] = elapsedSeconds
+            prefs[Keys.SOLITAIRE_WINS] = (prefs[Keys.SOLITAIRE_WINS] ?: 0) + 1
         }
     }
 }

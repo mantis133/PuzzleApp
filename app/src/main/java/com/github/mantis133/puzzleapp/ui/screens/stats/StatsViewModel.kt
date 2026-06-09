@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mantis133.puzzleapp.data.MinesweeperStats
 import com.github.mantis133.puzzleapp.data.ShikakuStats
+import com.github.mantis133.puzzleapp.data.SolitaireStats
 import com.github.mantis133.puzzleapp.data.StatsRepository
 import com.github.mantis133.puzzleapp.data.SudokuStats
 import com.github.mantis133.puzzleapp.data.WiresStats
@@ -38,5 +39,11 @@ class StatsViewModel(application: Application) : AndroidViewModel(application) {
         scope        = viewModelScope,
         started      = SharingStarted.WhileSubscribed(5_000),
         initialValue = WiresStats()
+    )
+
+    val solitaireStats: StateFlow<SolitaireStats> = repo.solitaireStats.stateIn(
+        scope        = viewModelScope,
+        started      = SharingStarted.WhileSubscribed(5_000),
+        initialValue = SolitaireStats()
     )
 }

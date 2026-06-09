@@ -30,6 +30,7 @@ fun HomeScreen(
     onNavigateToChess:       () -> Unit,
     onNavigateToMinesweeper: (MinesweeperDifficulty) -> Unit,
     onNavigateToWires:       (Difficulty) -> Unit,
+    onNavigateToSolitaire:   () -> Unit,
     onOpenDrawer: () -> Unit
 ) {
     Scaffold(
@@ -73,6 +74,7 @@ fun HomeScreen(
             item { ChessCard(onPlay = onNavigateToChess) }
             item { MinesweeperCard(onPlay = onNavigateToMinesweeper) }
             item { WiresCard(onPlay = onNavigateToWires) }
+            item { SolitaireCard(onPlay = onNavigateToSolitaire) }
         }
     }
 }
@@ -455,6 +457,28 @@ private fun WiresCard(onPlay: (Difficulty) -> Unit) {
                 onClick  = { onPlay(selectedDifficulty) },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Play") }
+        }
+    }
+}
+
+@Composable
+private fun SolitaireCard(onPlay: () -> Unit) {
+    val info = PuzzleTypes.SOLITAIRE
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = info.emoji, style = MaterialTheme.typography.displaySmall)
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(info.displayName, style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(2.dp))
+                    Text(info.description, style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onPlay, modifier = Modifier.fillMaxWidth()) { Text("Play") }
         }
     }
 }

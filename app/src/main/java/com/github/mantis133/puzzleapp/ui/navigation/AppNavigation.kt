@@ -28,6 +28,7 @@ import com.github.mantis133.puzzleapp.ui.screens.shikaku.ShikakuScreen
 import com.github.mantis133.puzzleapp.ui.screens.stats.StatsScreen
 import com.github.mantis133.puzzleapp.ui.screens.sudoku.SudokuScreen
 import com.github.mantis133.puzzleapp.ui.screens.wires.WiresScreen
+import com.github.mantis133.puzzleapp.ui.screens.solitaire.SolitaireScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -46,6 +47,7 @@ sealed class Screen(val route: String) {
     data object Wires : Screen("wires/{difficulty}") {
         fun createRoute(difficulty: Difficulty) = "wires/${difficulty.toNavArg()}"
     }
+    data object Solitaire : Screen("solitaire")
 }
 
 @Composable
@@ -60,7 +62,8 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
     val isGameScreen = currentRoute?.startsWith("shikaku/")     == true ||
                        currentRoute?.startsWith("sudoku/")      == true ||
                        currentRoute?.startsWith("minesweeper/") == true ||
-                       currentRoute?.startsWith("wires/")       == true
+                       currentRoute?.startsWith("wires/")       == true ||
+                       currentRoute == Screen.Solitaire.route
 
     ModalNavigationDrawer(
         drawerState    = drawerState,
@@ -130,6 +133,7 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
                     onNavigateToWires       = { difficulty ->
                         navController.navigate(Screen.Wires.createRoute(difficulty))
                     },
+                    onNavigateToSolitaire   = { navController.navigate(Screen.Solitaire.route) },
                     onOpenDrawer = { scope.launch { drawerState.open() } }
                 )
             }
@@ -142,6 +146,10 @@ fun AppNavigation(navController: NavHostController = rememberNavController()) {
 
             composable(Screen.Chess.route) {
                 ChessPuzzleScreen(onNavigateBack = { navController.popBackStack() })
+            }
+
+            composable(Screen.Solitaire.route) {
+                SolitaireScreen(onNavigateBack = { navController.popBackStack() })
             }
 
             composable(

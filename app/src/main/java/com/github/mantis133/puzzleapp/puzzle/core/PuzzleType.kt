@@ -44,6 +44,13 @@ object PuzzleTypes {
         emoji       = "🔌"
     )
 
-    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU, SUDOKU, CHESS, MINESWEEPER, WIRES)
+    val SOLITAIRE = PuzzleTypeInfo(
+        id          = "solitaire",
+        displayName = "Solitaire",
+        description = "Classic Klondike. Move all cards to the four foundations, Ace to King.",
+        emoji       = "🃏"
+    )
+
+    val all: List<PuzzleTypeInfo> = listOf(SHIKAKU, SUDOKU, CHESS, MINESWEEPER, WIRES, SOLITAIRE)
 }
 
